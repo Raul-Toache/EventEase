@@ -1,0 +1,82 @@
+@page "/events/{id:int}"
+@inject IEventService EventService
+@inject NavigationManager Navigation
+
+<div class="container-page">
+    @if (isLoading)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (ev == null)
+    {
+        <div class="alert alert-warning">Event not found. <a href="/events">Return to Events</a>.</div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                @if (!string.IsNullOrWhiteSpace(ev.ImageUrl))
+                {
+                    <img src="@ev.ImageUrl" class="img-fluid rounded" alt="@ev.Name" />
+                }
+                else
+                {
+                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height:220px">No image</div>
+                }
+            </div>
+            <div class="col-12 col-md-8 d-flex flex-column">
+                <h2>@ev.Name</h2>
+                <div class="text-muted mb-2">@ev.Date.ToString("f") — <strong>@ev.Location</strong></div>
+                <p>@ev.Description</p>
+
+                <hr />
+
+                <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-outline-secondary" href="/events">Back to events</a>
+                    <a class="btn btn-primary" href="/events/@ev.Id/register">Register for this event</a>
+                </div>
+
+                <h5>Quick register</h5>
+                @if (registered)
+                {
+                    <div class="alert alert-success" role="alert">Thanks, @registration.Name! You're registered.</div>
+                }
+                else
+                {
+                    <EditForm Model="registration" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="mb-2">
+                            <InputText class="form-control" @bind-Value="registration.Name" placeholder="Your name" />
+                        </div>
+                        <div class="mb-2">
+                            <InputText class="form-control" @bind-Value="registration.Email" placeholder="Your email" />
+                        </div>
+                        <button class="btn btn-primary" type="submit">Register</button>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int id { get; set; }
+    private Event? ev;
+    private EventRegistration registration = new();
+    private bool registered = false;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        ev = await EventService.GetEventByIdAsync(id);
+        isLoading = false;
+    }
+
+    private void HandleRegister()
+    {
+        // In a real app you'd POST to an API. For now we simply mark registered.
+        registered = true;
+    }
+}

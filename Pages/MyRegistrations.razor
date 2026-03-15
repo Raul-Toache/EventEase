@@ -1,0 +1,72 @@
+@page "/my-registrations"
+@inject UserSessionService Session
+
+<div class="container-page">
+  <h3>My Registrations</h3>
+
+  @if (!Session.IsAuthenticated)
+  {
+    <div class="alert alert-warning">
+      You have not registered for any events yet.
+    </div>
+  }
+  else if (!Session.Registrations.Any())
+  {
+    <div class="alert alert-info">
+      No registrations yet. Register for an event from the <a href="/events">events page</a>.
+    </div>
+  }
+  else
+  {
+    <p class="mb-3">Logged in as <strong>@Session.UserName</strong> (<em>@Session.Email</em>)</p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Registered At</th>
+          <th>Attendance</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var item in Session.Registrations)
+        {
+          <tr class="@(item.IsAttended ? "table-success" : "")">
+            <td>@item.EventName</td>
+            <td>@item.Date.ToString("MMM dd, yyyy")</td>
+            <td>@item.Location</td>
+            <td>@item.RegisteredAt.ToString("g")</td>
+            <td>@(item.IsAttended ? "Attended" : "Pending")</td>
+            <td>
+              @if (!item.IsAttended)
+              {
+                <button class="btn btn-sm btn-outline-primary" @onclick="() => MarkAttendance(item.EventId)">Mark as Attended</button>
+              }
+              else
+              {
+                <span class="badge bg-success">Done</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <button class="btn btn-danger" @onclick="ClearSession">Clear Session</button>
+  }
+</div>
+
+@code {
+  private void MarkAttendance(int eventId)
+  {
+    Session.SetAttendance(eventId, true);
+  }
+}
+
+@code {
+  private void ClearSession()
+  {
+    Session.ClearSession();
+  }
+}

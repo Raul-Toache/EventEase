@@ -1,0 +1,54 @@
+@page "/events"
+@inject IEventService EventService
+
+<h3 class="page-title">Events</h3>
+
+<div class="mb-3 d-flex">
+  <input class="form-control me-2" placeholder="Search events by name, location..." @bind="searchTerm" aria-label="Search events" />
+  <button class="btn btn-outline-secondary" @onclick="ClearSearch">Clear</button>
+</div>
+
+@if (events == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    var filtered = FilteredEvents().ToList();
+    if (!filtered.Any())
+    {
+        <p><em>No events match your search.</em></p>
+    }
+    else
+    {
+        <div class="events-grid">
+            @foreach (var ev in filtered)
+            {
+                <EventCard Event="ev" />
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<Event>? events;
+    private string searchTerm = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Use the static dataset from EventService (currently seeded with 100 events)
+        events = await EventService.GetEventsAsync();
+    }
+
+    private void ClearSearch() => searchTerm = string.Empty;
+
+    private IEnumerable<Event> FilteredEvents()
+    {
+        if (events == null) return Enumerable.Empty<Event>();
+        if (string.IsNullOrWhiteSpace(searchTerm)) return events;
+        var q = searchTerm.Trim().ToLowerInvariant();
+        return events.Where(e => (!string.IsNullOrWhiteSpace(e.Name) && e.Name.ToLowerInvariant().Contains(q))
+            || (!string.IsNullOrWhiteSpace(e.Location) && e.Location.ToLowerInvariant().Contains(q))
+            || (!string.IsNullOrWhiteSpace(e.Description) && e.Description.ToLowerInvariant().Contains(q)));
+    }
+}

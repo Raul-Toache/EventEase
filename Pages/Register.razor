@@ -1,0 +1,77 @@
+@page "/events/{id:int}/register"
+@inject IEventService EventService
+@inject UserSessionService Session
+@inject NavigationManager Navigation
+
+<div class="container-page">
+  @if (isLoading)
+  {
+    <p><em>Loading...</em></p>
+  }
+  else if (ev == null)
+  {
+    <div class="alert alert-warning">Event not found. <a href="/events">Return to Events</a>.</div>
+  }
+  else
+  {
+    <h2>Register for @ev.Name</h2>
+    <div class="mb-3 text-muted">@ev.Date.ToString("f") — <strong>@ev.Location</strong></div>
+
+    @if (registered)
+    {
+      <div class="alert alert-success">Thanks, @registration.Name — you're registered!</div>
+      <button class="btn btn-outline-primary" @onclick="BackToEvents">Back to events</button>
+    }
+    else
+    {
+      <EditForm Model="registration" OnValidSubmit="HandleRegister">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-2">
+          <InputText class="form-control" @bind-Value="registration.Name" placeholder="Your name" />
+        </div>
+        <div class="mb-2">
+          <InputText class="form-control" @bind-Value="registration.Email" placeholder="Your email" />
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Register</button>
+          <button class="btn btn-outline-secondary" type="button" @onclick="Cancel">Cancel</button>
+        </div>
+      </EditForm>
+    }
+  }
+</div>
+
+@code {
+  [Parameter] public int id { get; set; }
+  private Event? ev;
+  private EventRegistration registration = new();
+  private bool registered;
+  private bool isLoading = true;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    isLoading = true;
+    ev = await EventService.GetEventByIdAsync(id);
+    isLoading = false;
+  }
+
+  private void HandleRegister()
+  {
+    if (ev != null)
+    {
+      Session.AddRegistration(ev, registration);
+    }
+    registered = true;
+  }
+
+  private void BackToEvents()
+  {
+    Navigation.NavigateTo("/events");
+  }
+
+  private void Cancel()
+  {
+    Navigation.NavigateTo($"/events/{id}");
+  }
+}

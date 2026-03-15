@@ -1,0 +1,59 @@
+@using EventEase.Models
+@inject NavigationManager Navigation
+
+@if (!IsValidEvent)
+{
+  <div class="card event-card h-100 border-danger bg-light">
+    <div class="card-body">
+      <p class="text-danger mb-0">Invalid event data</p>
+    </div>
+  </div>
+}
+else
+{
+  <div class="card event-card h-100" role="button" @onclick="NavigateToDetails" aria-label="View details for @Event.Name">
+    <div class="row g-0 align-items-stretch">
+    <div class="col-auto d-flex align-items-center justify-content-center event-image bg-primary text-white">
+      @if (!string.IsNullOrWhiteSpace(Event.ImageUrl))
+      {
+        <img src="@Event.ImageUrl" alt="@Event.Name" class="img-fluid rounded-start" style="width:100%;height:100%;object-fit:cover;" />
+      }
+      else
+      {
+        <i class="bi bi-calendar-event"></i>
+      }
+    </div>
+    <div class="col">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <h5 class="card-title mb-1">@Event.Name</h5>
+          <small class="text-muted">@Event.Date.ToString("MMM dd, yyyy")</small>
+        </div>
+        <p class="mb-2"><span class="badge bg-secondary">@Event.Location</span></p>
+        <p class="card-text text-truncate">@Event.Description</p>
+      </div>
+      <div class="card-footer">
+        <div class="d-flex">
+          <button class="btn btn-sm btn-outline-primary ms-auto" @onclick:stopPropagation="true" @onclick="NavigateToDetails">Details</button>
+          <button class="btn btn-sm btn-primary ms-2" @onclick:stopPropagation="true" @onclick="NavigateToRegister">Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+@code {
+  [Parameter] public Event Event { get; set; } = default!;
+
+  private bool IsValidEvent => Event != null && Event.Id > 0 && !string.IsNullOrWhiteSpace(Event.Name);
+
+  void NavigateToDetails()
+  {
+    Navigation.NavigateTo($"/events/{Event.Id}");
+  }
+  void NavigateToRegister()
+  {
+    Navigation.NavigateTo($"/events/{Event.Id}/register");
+  }
+}
